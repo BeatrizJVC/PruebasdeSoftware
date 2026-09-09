@@ -157,7 +157,7 @@ Dado un equipo reservado para un determinado período, cuando se intenta aprobar
 
 ### CA-07 — Duración
 
-Dada una solicitud cuya duración supera 2 días, el sistema debe rechazarla.
+Dada una solicitud cuya duración supera 2 días hábiles, el sistema debe rechazarla.
 
 ### CA-08 — Equipo en mantenimiento
 
@@ -648,25 +648,27 @@ Las reglas de negocio deberán implementarse de forma que puedan ser probadas de
 
 # 9. Matriz de trazabilidad
 
-La matriz permite relacionar los requisitos definidos con sus criterios de aceptación, implementación y casos de prueba. Los campos de evidencia y resultado se completarán una vez implementado y probado el sistema.
+La siguiente matriz relaciona los requisitos con su implementación y con
+los casos de prueba ejecutados durante los ciclos de verificación y validación.
 
-| ID requisito | Criterio de aceptación / regla                                                                            | Evidencia de implementación | Caso(s) de prueba                 | Resultado |
-| ------------ | --------------------------------------------------------------------------------------------------------- | --------------------------- | --------------------------------- | --------- |
-| RF-01        | CA-01: credenciales válidas permiten iniciar sesión. CA-02: credenciales inválidas son rechazadas.        | Pendiente                   | TC-01, TC-02                      | Pendiente |
-| RF-02        | Solo se permiten operaciones correspondientes al rol autenticado.                                         | Pendiente                   | TC-03                             | Pendiente |
-| RF-04        | El encargado puede registrar y modificar equipos y sus estados.                                           | Pendiente                   | TC-04                             | Pendiente |
-| RF-06        | CA-03, CA-04, CA-05, CA-07 y CA-08. La solicitud debe cumplir RN-01, RN-02, RN-03, RN-05, RN-06 y RN-11.  | Pendiente                   | TC-05, TC-06, TC-07, TC-08, TC-09 | Pendiente |
-| RF-08        | CA-11 / RN-10: solo pueden cancelarse solicitudes SOLICITADAS o APROBADAS antes de la entrega.            | Pendiente                   | TC-10                             | Pendiente |
-| RF-10        | CA-06 / RN-04: no se puede aprobar una solicitud si existe un préstamo incompatible para el mismo equipo. | Pendiente                   | TC-11                             | Pendiente |
-| RF-12        | CA-09 / RN-08: solo una solicitud APROBADA puede pasar a ENTREGADA.                                       | Pendiente                   | TC-12                             | Pendiente |
-| RF-13        | CA-10 / RN-09: solo un préstamo ENTREGADO puede pasar a DEVUELTO.                                         | Pendiente                   | TC-13                             | Pendiente |
-| RF-16        | RN-12: un préstamo entregado cuya fecha de devolución venció debe identificarse como atrasado.            | Pendiente                   | TC-14                             | Pendiente |
-| RF-17        | RN-04 y RN-06: la disponibilidad debe considerar estado, período y reservas aprobadas.                    | Pendiente                   | TC-11, TC-15                      | Pendiente |
-| RF-18        | CA-12: los datos deben mantenerse luego de cerrar y volver a ejecutar la aplicación.                      | Pendiente                   | TC-16                             | Pendiente |
-| RF-19        | Los eventos relevantes deben quedar registrados mediante logs.                                            | Pendiente                   | TC-17                             | Pendiente |
-| RF-20        | Las entradas u operaciones inválidas deben ser rechazadas sin cerrar inesperadamente el programa.         | Pendiente                   | TC-18                             | Pendiente |
-| RNF-02       | La aplicación puede instalarse y ejecutarse siguiendo únicamente el README.                               | Pendiente                   | TC-19                             | Pendiente |
-| RNF-05       | Una operación fallida no debe dejar información en un estado inconsistente.                               | Pendiente                   | TC-20                             | Pendiente |
+| ID requisito | Criterio / regla                                                                                    | Evidencia de implementación                                          | Caso(s) de prueba                                             | Resultado                    |
+| ------------ | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------- | ---------------------------- |
+| RF-01        | CA-01 y CA-02: autenticación válida y rechazo de credenciales inválidas.                            | `src/services/auth_service.py`, función `login()`                    | TC-01, TC-02                                                  | PASS                         |
+| RF-02        | Solo se permiten operaciones correspondientes al rol autenticado.                                   | `src/services/auth_service.py`, `src/main.py`                        | TC-03                                                         | PASS                         |
+| RF-03        | El Encargado puede registrar, consultar, modificar, habilitar y deshabilitar usuarios.              | `src/services/user_service.py`, `src/main.py`, commit `ca6a524`      | TC-21, TC-22                                                  | PASS — verificado en Ciclo 2 |
+| RF-04        | El Encargado puede registrar, consultar y modificar equipos.                                        | `src/services/equipment_service.py`, `src/main.py`, commit `ca6a524` | TC-04, TC-23                                                  | PASS — verificado en Ciclo 2 |
+| RF-06        | Las solicitudes deben cumplir las reglas RN-01, RN-02, RN-03, RN-05, RN-06 y RN-11.                 | `src/services/loan_service.py`, `src/utils/date_utils.py`            | TC-05, TC-06, TC-07, TC-08, TC-09, TC-10, TC-11, TC-12, TC-24 | PASS                         |
+| RF-08        | Solo pueden cancelarse solicitudes SOLICITADAS o APROBADAS antes de la entrega.                     | `src/services/loan_service.py`, función `cancel_request()`           | TC-15, TC-16                                                  | PASS                         |
+| RF-10        | Una solicitud solo puede aprobarse si cumple las reglas y no presenta conflictos de disponibilidad. | `src/services/loan_service.py`, función `approve_request()`          | TC-13, TC-14, TC-25                                           | PASS                         |
+| RF-12        | Solo una solicitud APROBADA puede pasar a ENTREGADA y sus equipos pasan a PRESTADO.                 | `src/services/loan_service.py`, función `deliver_loan()`             | TC-17, TC-20, TC-25                                           | PASS                         |
+| RF-13        | Un préstamo ENTREGADO puede pasar a DEVUELTO y sus equipos vuelven a DISPONIBLE.                    | `src/services/loan_service.py`, función `return_loan()`              | TC-18, TC-20, TC-25                                           | PASS                         |
+| RF-16        | Los préstamos ENTREGADOS cuya fecha de devolución venció deben identificarse como atrasados.        | `src/services/loan_service.py`, `src/utils/date_utils.py`            | TC-11                                                         | PASS                         |
+| RF-17        | La disponibilidad considera estado, período, préstamos aprobados/entregados y solapamientos.        | `src/services/loan_service.py`, función `is_equipment_available()`   | TC-12, TC-14                                                  | PASS                         |
+| RF-18        | Los datos permanecen almacenados después de cerrar y volver a ejecutar la aplicación.               | `src/repositories/json_repository.py`                                | TC-19                                                         | PASS                         |
+| RF-19        | Los eventos relevantes quedan registrados mediante logs.                                            | `src/utils/logger.py`, evidencia `logs/app.log`                      | Evidencia de ejecución                                        | PASS                         |
+| RF-20        | Las operaciones inválidas son rechazadas sin finalizar abruptamente la aplicación.                  | `src/main.py`, servicios y Sentry                                    | TC-02, TC-07, TC-09, TC-10, TC-16 + evidencia Sentry          | PASS                         |
+| RNF-02       | La aplicación puede instalarse y ejecutarse siguiendo el `README.md`.                               | `README.md`                                                          | Revisión de ejecución documentada                             | PASS                         |
+| RNF-05       | Una operación inválida no debe dejar información en estado inconsistente.                           | Servicios y repositorios                                             | TC-14, TC-16                                                  | PASS                         |
 
 ## 9.1 Forma de completar la matriz
 
@@ -770,21 +772,21 @@ Se utilizarán datos de demostración controlados para permitir la reproducción
 
 ### Usuarios iniciales
 
-| ID   | Nombre            | Correo                                            | Rol         | Condición             |
-| ---- | ----------------- | ------------------------------------------------- | ----------- | --------------------- |
-| U-01 | Ana Solicitante   | [ana@fablab.cl](mailto:ana@fablab.cl)             | SOLICITANTE | Sin préstamos         |
-| U-02 | Pedro Solicitante | [pedro@fablab.cl](mailto:pedro@fablab.cl)         | SOLICITANTE | Con préstamo atrasado |
-| U-03 | Elena Encargada   | [encargada@fablab.cl](mailto:encargada@fablab.cl) | ENCARGADO   | Usuario administrador |
+| ID    | Nombre            | Correo                                            | Rol         | Condición             |
+| ----- | ----------------- | ------------------------------------------------- | ----------- | --------------------- |
+| U-001 | Ana Solicitante   | [ana@fablab.cl](mailto:ana@fablab.cl)             | SOLICITANTE | Sin préstamos         |
+| U-002 | Pedro Solicitante | [pedro@fablab.cl](mailto:pedro@fablab.cl)         | SOLICITANTE | Con préstamo atrasado |
+| U-003 | Elena Encargada   | [encargada@fablab.cl](mailto:encargada@fablab.cl) | ENCARGADO   | Usuario administrador |
 
 ### Equipos iniciales
 
-| ID    | Nombre       | Estado        |
-| ----- | ------------ | ------------- |
-| EQ-01 | Cámara Canon | DISPONIBLE    |
-| EQ-02 | Trípode      | DISPONIBLE    |
-| EQ-03 | Micrófono    | DISPONIBLE    |
-| EQ-04 | Notebook     | MANTENIMIENTO |
-| EQ-05 | Grabadora    | DISPONIBLE    |
+| ID     | Nombre       | Estado        |
+| ------ | ------------ | ------------- |
+| EQ-001 | Cámara Canon | DISPONIBLE    |
+| EQ-002 | Trípode      | DISPONIBLE    |
+| EQ-003 | Micrófono    | DISPONIBLE    |
+| EQ-004 | Notebook     | MANTENIMIENTO |
+| EQ-005 | Grabadora    | DISPONIBLE    |
 
 Los datos podrán ampliarse según las necesidades específicas de las pruebas.
 
@@ -1147,6 +1149,84 @@ Pasos:
 Resultado esperado:
 El ciclo completo termina correctamente sin inconsistencias.
 
+## TC-21 — Registrar usuario desde la CLI
+
+Categoría: Funcional / Reejecución
+
+Requisito: RF-03
+
+Precondición: Encargado autenticado.
+
+Resultado esperado:
+
+El Encargado puede registrar un nuevo usuario y posteriormente visualizarlo
+en la consulta de usuarios.
+
+Resultado: PASS — Ciclo 2.
+
+---
+
+## TC-22 — Modificar usuario desde la CLI
+
+Categoría: Funcional / Reejecución
+
+Requisito: RF-03
+
+Precondición: Existe un usuario registrado.
+
+Resultado esperado:
+
+El Encargado puede modificar los datos del usuario manteniendo su identificador.
+
+Resultado: PASS — Ciclo 2.
+
+---
+
+## TC-23 — Modificar equipo desde la CLI
+
+Categoría: Funcional / Reejecución
+
+Requisito: RF-04
+
+Precondición: Existe un equipo registrado.
+
+Resultado esperado:
+
+El Encargado puede modificar nombre, categoría y descripción del equipo
+manteniendo su identificador.
+
+Resultado: PASS — Ciclo 2.
+
+---
+
+## TC-24 — Regresión de autenticación y solicitud
+
+Categoría: Regresión
+
+Requisitos: RF-01, RF-06
+
+Resultado esperado:
+
+El solicitante puede iniciar sesión y crear normalmente una solicitud válida
+después de las correcciones introducidas.
+
+Resultado: PASS — Ciclo 2.
+
+---
+
+## TC-25 — Regresión end-to-end
+
+Categoría: Regresión / Escenario completo
+
+Requisitos: RF-06, RF-10, RF-12, RF-13
+
+Resultado esperado:
+
+El flujo SOLICITADA -> APROBADA -> ENTREGADA -> DEVUELTA continúa funcionando
+correctamente después de las correcciones.
+
+Resultado: PASS — Ciclo 2.
+
 ---
 
 # 11.1 Cobertura mínima exigida
@@ -1162,6 +1242,41 @@ La suite diseñada contiene:
 | Escenario completo    |                 1 | TC-20                                                  |
 
 Por lo tanto, la estrategia supera los mínimos establecidos para la tarea.
+
+# 11.2 Resultados de los ciclos de prueba
+
+## Ciclo 1
+
+Se ejecutaron 20 casos de prueba sobre la primera versión evaluada,
+incluyendo pruebas funcionales, negativas, de borde, combinación de reglas
+y un escenario end-to-end.
+
+Resultado: **20/20 casos PASS**.
+
+Posteriormente, mediante una actividad de revisión de requisitos contra
+la interfaz implementada, se detectaron dos brechas relacionadas con RF-03
+y RF-04. Ambas fueron registradas como Issues en GitHub antes de realizar
+las correcciones.
+
+## Ciclo 2
+
+Las brechas de RF-03 y RF-04 fueron corregidas en el commit `ca6a524`.
+
+Se ejecutaron TC-21 a TC-25 para comprobar las correcciones y realizar
+pruebas de regresión.
+
+Resultado: **5/5 casos PASS**.
+
+Adicionalmente, se ejecutó nuevamente la suite automatizada completa con
+`pytest`, finalizando sin fallos.
+
+Los Issues asociados fueron cerrados después de verificar sus correcciones.
+
+## Ciclo 3
+
+No fue necesario realizar un tercer ciclo, debido a que las correcciones
+fueron verificadas satisfactoriamente durante el Ciclo 2 y no se detectaron
+regresiones.
 
 # 12. Diseño general y arquitectura
 
@@ -1526,9 +1641,9 @@ Intentar aprobar solicitud
         ↓
 ¿Cumple reglas?
         ↓
-Sí → guardar cambio a APROBADA
+Sí -> guardar cambio a APROBADA
 
-No → rechazar operación
+No -> rechazar operación
      mantener estado anterior
 ```
 
@@ -1544,29 +1659,29 @@ Por ejemplo:
 
 ```text
 tests/test_auth.py
-→ login válido
-→ login inválido
-→ permisos por rol
+-> login válido
+-> login inválido
+-> permisos por rol
 ```
 
 ```text
 tests/test_equipment.py
-→ creación de equipo
-→ mantenimiento
-→ disponibilidad
+-> creación de equipo
+-> mantenimiento
+-> disponibilidad
 ```
 
 ```text
 tests/test_loans.py
-→ máximo de equipos
-→ duración máxima
-→ fechas inválidas
-→ atrasos
-→ solapamientos
-→ aprobación
-→ cancelación
-→ entrega
-→ devolución
+-> máximo de equipos
+-> duración máxima
+-> fechas inválidas
+-> atrasos
+-> solapamientos
+-> aprobación
+-> cancelación
+-> entrega
+-> devolución
 ```
 
 De esta forma, las reglas de negocio pueden probarse sin tener que interactuar manualmente con todo el menú de la aplicación.
