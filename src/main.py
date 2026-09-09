@@ -3,6 +3,7 @@ from getpass import getpass
 
 from src.bootstrap import create_services
 from src.models.equipment import EquipmentStatus
+from src.models.user import UserRole
 from src.services.auth_service import AuthenticationError
 from src.services.loan_service import (
     InvalidLoanTransitionError,
@@ -200,7 +201,8 @@ def equipment_management_menu(services):
         print("\n--- GESTIÓN DE EQUIPOS ---")
         print("1. Consultar equipos")
         print("2. Registrar equipo")
-        print("3. Cambiar estado")
+        print("3. Modificar equipo")
+        print("4. Cambiar estado")
         print("0. Volver")
 
         option = input("Opción: ").strip()
@@ -212,21 +214,10 @@ def equipment_management_menu(services):
                 )
 
             elif option == "2":
-                equipment_id = input(
-                    "ID: "
-                ).strip()
-
-                name = input(
-                    "Nombre: "
-                ).strip()
-
-                category = input(
-                    "Categoría: "
-                ).strip()
-
-                description = input(
-                    "Descripción: "
-                ).strip()
+                equipment_id = input("ID: ").strip()
+                name = input("Nombre: ").strip()
+                category = input("Categoría: ").strip()
+                description = input("Descripción: ").strip()
 
                 equipment_service.create_equipment(
                     equipment_id,
@@ -235,9 +226,7 @@ def equipment_management_menu(services):
                     description,
                 )
 
-                print(
-                    "Equipo registrado correctamente."
-                )
+                print("Equipo registrado correctamente.")
 
             elif option == "3":
                 show_equipment(
@@ -245,8 +234,55 @@ def equipment_management_menu(services):
                 )
 
                 equipment_id = input(
+                    "\nID del equipo a modificar: "
+                ).strip()
+
+                equipment = equipment_service.get_equipment_by_id(
+                    equipment_id
+                )
+
+                print(
+                    "\nDeje el campo vacío para mantener "
+                    "el valor actual."
+                )
+
+                name = input(
+                    f"Nombre [{equipment.name}]: "
+                ).strip()
+                category = input(
+                    f"Categoría [{equipment.category}]: "
+                ).strip()
+                description = input(
+                    f"Descripción [{equipment.description}]: "
+                ).strip()
+
+                updated_equipment = equipment_service.update_equipment(
+                    equipment_id,
+                    name=name if name else None,
+                    category=category if category else None,
+                    description=description if description else None,
+                )
+
+                print("\nEquipo modificado correctamente:")
+                print(
+                    f"{updated_equipment.id} | "
+                    f"{updated_equipment.name} | "
+                    f"{updated_equipment.category} | "
+                    f"{updated_equipment.status.value}"
+                )
+
+            elif option == "4":
+                show_equipment(
+                    equipment_service.get_all_equipment()
+                )
+
+                equipment_id = input(
                     "ID del equipo: "
                 ).strip()
+
+                equipment_service.get_equipment_by_id(
+                    equipment_id
+                )
 
                 print("\nEstados:")
                 print("1. DISPONIBLE")
@@ -285,7 +321,6 @@ def equipment_management_menu(services):
 
         pause()
 
-
 # ============================================================
 # GESTIÓN DE USUARIOS - ENCARGADO
 # ============================================================
@@ -296,8 +331,10 @@ def user_management_menu(services):
     while True:
         print("\n--- GESTIÓN DE USUARIOS ---")
         print("1. Consultar usuarios")
-        print("2. Deshabilitar usuario")
-        print("3. Habilitar usuario")
+        print("2. Registrar usuario")
+        print("3. Modificar usuario")
+        print("4. Deshabilitar usuario")
+        print("5. Habilitar usuario")
         print("0. Volver")
 
         option = input("Opción: ").strip()
@@ -307,9 +344,7 @@ def user_management_menu(services):
                 users = user_service.get_all_users()
 
                 if not users:
-                    print(
-                        "No existen usuarios registrados."
-                    )
+                    print("No existen usuarios registrados.")
 
                 for user in users:
                     state = (
@@ -326,19 +361,133 @@ def user_management_menu(services):
                         f"{state}"
                     )
 
-            elif option in {"2", "3"}:
+            elif option == "2":
+                user_id = input("ID: ").strip()
+                name = input("Nombre: ").strip()
+                email = input("Correo: ").strip()
+                password = getpass("Contraseña: ")
+
+                print("\nRoles:")
+                print("1. SOLICITANTE")
+                print("2. ENCARGADO")
+
+                role_option = input(
+                    "Seleccione rol: "
+                ).strip()
+
+                roles = {
+                    "1": UserRole.SOLICITANTE,
+                    "2": UserRole.ENCARGADO,
+                }
+
+                if role_option not in roles:
+                    print("Rol inválido.")
+                    continue
+
+                user = user_service.create_user(
+                    user_id,
+                    name,
+                    email,
+                    password,
+                    roles[role_option],
+                )
+
+                print(
+                    f"\nUsuario {user.id} registrado "
+                    "correctamente."
+                )
+
+            elif option == "3":
+                users = user_service.get_all_users()
+
+                if not users:
+                    print("No existen usuarios registrados.")
+                    pause()
+                    continue
+
+                for user in users:
+                    state = (
+                        "HABILITADO"
+                        if user.enabled
+                        else "DESHABILITADO"
+                    )
+                    print(
+                        f"{user.id} | "
+                        f"{user.name} | "
+                        f"{user.email} | "
+                        f"{user.role.value} | "
+                        f"{state}"
+                    )
+
+                user_id = input(
+                    "\nID del usuario a modificar: "
+                ).strip()
+
+                user = user_service.get_user_by_id(user_id)
+
+                print(
+                    "\nDeje el campo vacío para mantener "
+                    "el valor actual."
+                )
+
+                name = input(
+                    f"Nombre [{user.name}]: "
+                ).strip()
+                email = input(
+                    f"Correo [{user.email}]: "
+                ).strip()
+
+                print(f"Rol actual: {user.role.value}")
+                print("1. SOLICITANTE")
+                print("2. ENCARGADO")
+                print("ENTER. Mantener rol actual")
+
+                role_option = input(
+                    "Seleccione rol: "
+                ).strip()
+
+                roles = {
+                    "1": UserRole.SOLICITANTE,
+                    "2": UserRole.ENCARGADO,
+                }
+
+                if role_option and role_option not in roles:
+                    print("Rol inválido.")
+                    continue
+
+                role = roles[role_option] if role_option else None
+
+                updated_user = user_service.update_user(
+                    user_id,
+                    name=name if name else None,
+                    email=email if email else None,
+                    role=role,
+                )
+
+                print("\nUsuario modificado correctamente:")
+                print(
+                    f"{updated_user.id} | "
+                    f"{updated_user.name} | "
+                    f"{updated_user.email} | "
+                    f"{updated_user.role.value}"
+                )
+
+            elif option in {"4", "5"}:
                 user_id = input(
                     "ID del usuario: "
                 ).strip()
 
-                enabled = option == "3"
+                enabled = option == "5"
 
                 user_service.set_user_enabled(
                     user_id,
                     enabled,
                 )
 
-                print("Usuario actualizado.")
+                if enabled:
+                    print("Usuario habilitado correctamente.")
+                else:
+                    print("Usuario deshabilitado correctamente.")
 
             elif option == "0":
                 return
@@ -350,7 +499,6 @@ def user_management_menu(services):
             print(f"Error: {error}")
 
         pause()
-
 
 # ============================================================
 # MENÚ ENCARGADO
@@ -580,8 +728,6 @@ if __name__ == "__main__":
         main()
 
     except Exception as error:
-        # Garantiza que el logger exista incluso si el
-        # error ocurrió durante el inicio de la aplicación.
         configure_logging()
 
         logger.exception(
